@@ -1,0 +1,112 @@
+\documentclass{article}
+
+\begin{document}
+A little more detail: The data are 20 years of human foraging returns from a subsistence hunting population in Paraguay (the Ache), comprising about 15k hunts in total (Hill \& Kintigh. 2009. Current Anthropology 50:369-377). Observed values are kilograms of meat returned to camp. The more complex models contain a 147-by-9 matrix of varying effects (147 unique hunters), as well as imputation of missing values. For the JAGS/Stan comparison, the machine I ran both on was a 3.09GHz i5, OS X 10.8, 12GB RAM. Stan was compiled with -O3, but JAGS wasn't.
+\par\vspace{0.3 cm}
+Load the required libraries and set the STAN options to use multiple CPUs
+<<>>=
+# zero-inflated gamma
+
+library(shinystan)
+library(MASS)
+library(rstan)
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+@
+The following section is a user-defined inverse logit function, which maps $(-\infty,\infty)$ $(x)$ into $(0,1]$ $(p)$.
+\par\vspace{0.3 cm}
+The \texttt{ifelse} statement maps $\infty$ into $1$.
+<<>>=
+# just my inv_logit function
+logistic <- function (x) 
+{
+    p <- exp(x)/(1 + exp(x))
+    p <- ifelse(x == Inf, 1, p)
+    p
+}
+@
+Set up for 1000 data points in 20 clusters of 50.
+<<>>=
+# simulate data
+N <- 1000 # number of cases
+J <- 20 # number of clusters
+NperJ <- N/J # cases per cluster
+NperJ
+@
+Scale parameter for gamma distribution
+<<>>=
+theta <- 1 # scale
+@
+Set up an indicator for which cluster: 50 repeats of cluster number for cluster 1 through cluster 20
+<<>>=
+id <- rep( 1:J , each=NperJ )
+str(id)
+@
+Means of varying intercepts
+<<>>=
+mu <- c( 0 , log(7) ) # means of varying intercepts
+@
+Variance-covariance matrix for varying intercepts
+<<>>=
+Sigma <- matrix( 0 , nrow=2 , ncol=2 ) # var-cov matrix for varying intercepts
+Sigma[1,1] <- 0.15
+Sigma[2,2] <- 0.5
+Sigma[1,2] <- Sigma[2,1] <- -0.8 * sqrt( Sigma[1,1] * Sigma[2,2] )
+
+Sigma
+@
+Generate a set of intercepts for each cluster
+\[
+\alpha = (\alpha_1,\alpha_2)
+\]
+where $\alpha_1$ determines the probability of success $p$ in a Bernoulli trial as
+\[
+p = \frac{e^{\alpha_1}}{1+e^{\alpha_1}}
+\]
+<<>>=
+alpha <- mvrnorm( J , mu=mu , Sigma=Sigma )
+
+alpha[1,]
+alpha[2,]
+alpha[3,]
+@
+Bernoulli trial with probability of success $p$ where $\alpha_1$ determines the probability of success as
+\[
+p = \frac{e^{\alpha_1}}{1+e^{\alpha_1}} = \frac{1}{1+e^{-\alpha_1}}
+\]
+The array \texttt{iszero} indicates success or failure in the Bernoulli trial.
+<<>>=
+y1 <- rbinom( N , size=1 , prob=logistic( alpha[id,1] ) ) # sim zeros
+iszero = y1
+@
+Now generate a vector gamma random variables with scale parameter $\theta$ ($\theta=1$) and shape parameter
+\[
+\theta e^{\alpha_2}
+\]
+<<>>=
+y2 <- (1-y1) * rgamma( N , shape=exp(alpha[id,2])*theta , scale=theta ) # sim observed
+y2
+@
+Replace the elements corresponding to success in the Bernoulli trial with $20$ for the $y$ array.
+\par\vspace{0.3 cm}
+The $20$ serves only as a placeholder so that $y$ can be vectorized in the STAN model code, but otherwise plays no role in the computations.
+<<>>=
+y = ifelse( y2==0 , 20 , y2 )  # 20 to prevent gamma density gacking in vectorized code
+@
+Now create a $2\times 2$ identity matrix $\Omega$ for use as the prior for the covariance matrix of the intercepts:
+<<>>=
+Omega = diag(2)
+Omega
+
+fit <-stan("zigamma.stan")
+
+rstan::traceplot( fit , c("mu","theta","sdi","rho") )
+
+print( fit , digits=2 , pars=c("mu","theta","sdi","rho") , probs=c(0.025,0.5,0.975) )
+
+launch_shinystan(fit)
+@
+
+
+\end{document}
