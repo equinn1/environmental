@@ -1,0 +1,39 @@
+\documentclass{article}
+
+\begin{document}
+
+<<>>=
+theta<-0.27      #probability of rain on a given day
+alpha=10         #shape parameter for gamma
+beta=2           #scale parameter for gamma
+years<-5
+N<-365*years     #sample size
+
+rained<-rbinom(N,1,theta)        #generate binary rain/no rain vector
+rainfall<-rgamma(N,alpha,beta)   #generate rainfall quantity vector
+
+y<-rained*rainfall               #observed values are product of these
+
+y[1:100]                         #print the first few y values
+
+hist(y[y>0])                     #histogram of measurable rainfall amounts
+@
+
+Call STAN
+
+<<>>=
+library(rstan)
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+
+stanfit<-stan("gamma_test.stan") #call STAN  
+print(stanfit)                   #print a summary of the results
+@
+
+Launch shinystan
+
+<<>>=
+library(shinystan)               #downloaded from cran
+launch_shinystan(stanfit)
+@
+\end{document}
