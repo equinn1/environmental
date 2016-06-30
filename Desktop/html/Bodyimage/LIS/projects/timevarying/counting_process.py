@@ -24,11 +24,11 @@ for dis in ['BDD','MDD','OCD','SOC']:
         if("ID" in line):                             #ID line
             wl=line.split("=")
             if(len(wl)>1):                            #skip if no ID
+                ID=wl[1]                          #save ID if there is one
                 if(ID in subjects.keys()):            #ID already present?
                     newsub=subjects[ID]
                 else:
-                    ID=wl[1]                              #save ID if there is one
-                    newsub=subj(ID,SS)                    #call subject constructor
+                    newsub=subj(ID,SS)                #call subject constructor
                     subjects[ID]=newsub
             
         if("Initial" in line):                        #save initial status
@@ -64,7 +64,7 @@ for dis in ['BDD','MDD','OCD','SOC']:
 
 print("Starting list")
 for key in subjects:
-#    print(subjects[key].get_ID())
+    print(subjects[key].get_ID())
     cpdict=subjects[key].get_cpdict()
     for dis in cpdict.keys():
         cpentries=cpdict[dis]
@@ -73,9 +73,7 @@ for key in subjects:
             start=cpe.get_start()
             end=cpe.get_end()
             state=cpe.get_state()
-#            print "%d %s %s %s" % (i, start, end, state)
-
-        print(dis)
+            print "%d %s %s %s" % (i, start, end, state)
         
 pf=open('bdd_state_python.obj','wb')      
 pickle.dump(subjects,pf,pickle.HIGHEST_PROTOCOL)
