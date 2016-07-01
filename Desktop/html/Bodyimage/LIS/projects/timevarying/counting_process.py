@@ -34,45 +34,45 @@ for dis in ['BDD','MDD','OCD','SOC']:
         if("Initial" in line):                        #save initial status
             init_state=line.split()[2]
             newsub.set_intake_state(init_state,dis)
-            cpentries=[]
-            newcp=cpentry(0,None,init_state)
-            cpentries.append(newcp)
-            newsub.set_cpentries(cpentries,dis)
+            scentries=[]
+            newsc=scentry(0,None,init_state)
+            scentries.append(newsc)
+            newsub.set_scentries(scentries,dis)
         
             
         if("Max" in line):
             maxtime=line.split()[2]
             newsub.set_maxtime(maxtime)
-            cpentries=newsub.get_cpentries(dis)
-            lastone=len(cpentries)-1
-            lastcp=cpentries[lastone]
+            scentries=newsub.get_scentries(dis)
+            lastone=len(scentries)-1
+            lastcp=scentries[lastone]
             lastcp.set_end(maxtime)
-            newsub.set_cpentries(cpentries,dis)
+            newsub.set_scentries(scentries,dis)
 
         if("STATE CHANGE" in line):
             wds=line.split()
             from_state=wds[3]
             to_state=wds[5]
             week=wds[8]
-            newcp=cpentry(week,None,to_state)
-            cpentries=newsub.get_cpentries(dis)
-            imax=len(cpentries)-1
-            cpe = cpentries[imax]
-            cpe.set_end(week)
-            cpentries.append(newcp)
-            newsub.set_cpentries(cpentries,dis)
+            newsc=scentry(week,None,to_state)
+            scentries=newsub.get_scentries(dis)
+            imax=len(scentries)-1
+            sce = scentries[imax]
+            sce.set_end(week)
+            scentries.append(newsc)
+            newsub.set_scentries(scentries,dis)
 
 print("Starting list")
 for key in subjects:
     print(subjects[key].get_ID())
-    cpdict=subjects[key].get_cpdict()
-    for dis in cpdict.keys():
-        cpentries=cpdict[dis]
-        for i in range(0,len(cpentries)):
-            cpe = cpentries[i]
-            start=cpe.get_start()
-            end=cpe.get_end()
-            state=cpe.get_state()
+    scdict=subjects[key].get_cpdict()
+    for dis in scdict.keys():
+        scentries=scdict[dis]
+        for i in range(0,len(scentries)):
+            sce = scentries[i]
+            start=sce.get_start()
+            end=sce.get_end()
+            state=sce.get_state()
             print "%d %s %s %s" % (i, start, end, state)
         
 pf=open('bdd_state_python.obj','wb')      

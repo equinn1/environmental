@@ -57,6 +57,28 @@ class cpobj:                      #counting process object class
         self.covariates.insert(0,{})
         return
 
+class scentry:           #state change entry class
+    def get_start(self):                    #return start time  
+        return self.start
+    def set_start(self,start):              #set start time
+        self.start=start
+        return
+    def get_end(self):                      #return end time
+        return self.end
+    def set_end(self,end):                  #set end time
+        self.end=end
+        return
+    def get_state(self):                    #get state
+        return self.state              
+    def set_state(self,state):              #set state
+        self.state=state
+        return
+    def __init__(self,start,end,state):     #cpentry constructor
+        self.start=start
+        self.end=end
+        self.state=state
+        return
+
 class cpentry:           #counting process entry class
     def get_start(self):                    #return start time  
         return self.start
@@ -93,6 +115,12 @@ class subj:                                 #subject class
         return self.cpdict[dis]
     def set_cpentries(self,cpentries,dis):       #set cpentries
         self.cpdict[dis]=cpentries
+    def get_scdict(self):                     #return cp entries dictionary
+        return self.scdict 
+    def get_scentries(self,dis):              #return cp entries
+        return self.scdict[dis]
+    def set_scentries(self,scentries,dis):       #set cpentries
+        self.scdict[dis]=scentries
         return
     def get_ID(self):                         #return ID
         return self.ID
@@ -115,5 +143,6 @@ class subj:                                 #subject class
         self.SS=SS                          #SS number
         self.maxtime=None                   #max time for subject
         self.intake_state={}                #intake state dictionary
+        self.scdict={}
         self.cpdict={}                      #cp entries dictionary
         return
