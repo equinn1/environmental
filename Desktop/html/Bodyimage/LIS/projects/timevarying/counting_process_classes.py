@@ -90,16 +90,26 @@ class cpentry:           #counting process entry class
     def set_end(self,end):                  #set end time
         self.end=end
         return
-    def get_state(self):                    #get state
-        return self.state              
-    def set_state(self,state):              #set state
-        self.state=state
+    def get_flag(self):                    #get state
+        return self.flag              
+    def set_state(self,flag):              #set state
+        self.flag=flag
         return
-    def __init__(self,start,end,state):     #cpentry constructor
+    def __init__(self,start,end,flag):     #cpentry constructor
         self.start=start
         self.end=end
-        self.state=state
+        self.flag=flag
         return
+
+class cp:       #counting process class
+    def get_cpentries(self):              #return cp entries
+        return self.cpentries
+    def set_cpentries(self,cpentries):       #set cpentries
+        self.cpentrie=cpentries
+        return
+    def __init__(self,cpid):
+        self.cpid=cpid
+        self.cpentries=[]
 
 class subj:                                 #subject class
     def get_intake_states(self):               #get intake state 
@@ -113,8 +123,8 @@ class subj:                                 #subject class
         return self.cpdict 
     def get_cpentries(self,dis):              #return cp entries
         return self.cpdict[dis]
-    def set_cpentries(self,cpentries,dis):       #set cpentries
-        self.cpdict[dis]=cpentries
+    def set_cpentries(self,cpentries,evt):       #set cpentries
+        self.cpdict[evt]=cpentries
     def get_scdict(self):                     #return cp entries dictionary
         return self.scdict 
     def get_scentries(self,dis):              #return cp entries
@@ -127,15 +137,22 @@ class subj:                                 #subject class
     def set_ID(self,ID):                      #set ID
         self.ID=ID
         return
-    def get_initline(self):                   #return initline dictionary
+    def set_instudy(self,val):
+        self.instudy=val
+        return
+    def get_instudy(self):
+        return self.instudy
+    def get_initlines(self):                   #return initline dictionary
         return self.initline
+    def get_initline(self,dis):                #return initline entry
+        return self.initline[dis]
     def set_initline(self,dis,iline):         #return initline for disorder
         self.initline[dis]=iline
         return
-    def get_time(self):                      #return max time
+    def get_maxtime(self):                      #return max time
         return self.maxtime
     def set_maxtime(self,maxtime):             #set max time
-        self.maxwk=maxtime
+        self.maxtime=maxtime
         return
     def __init__(self,ID,SS):      #subject constructor
         self.ID=ID                          #subject ID
@@ -145,4 +162,5 @@ class subj:                                 #subject class
         self.intake_state={}                #intake state dictionary
         self.scdict={}
         self.cpdict={}                      #cp entries dictionary
+        self.instudy=None
         return

@@ -8,6 +8,7 @@ import pickle
 from counting_process_classes import *
 
 subjects={}                                       #subject dictionary
+cps={}                                            #counting process dictionary
 
 for dis in ['BDD','MDD','OCD','SOC']:
     fname="data/STATE_"+dis+".txt"
@@ -30,19 +31,20 @@ for dis in ['BDD','MDD','OCD','SOC']:
                 else:
                     newsub=subj(ID,SS)                #call subject constructor
                     subjects[ID]=newsub
+                    subjects[ID].set_initline(dis,initline)
             
         if("Initial" in line):                        #save initial status
             init_state=line.split()[2]
-            newsub.set_intake_state(init_state,dis)
+            subjects[ID].set_intake_state(init_state,dis)
             scentries=[]
             newsc=scentry(0,None,init_state)
             scentries.append(newsc)
-            newsub.set_scentries(scentries,dis)
+            subjects[ID].set_scentries(scentries,dis)
         
             
         if("Max" in line):
             maxtime=line.split()[2]
-            newsub.set_maxtime(maxtime)
+            subjects[ID].set_maxtime(maxtime)
             scentries=newsub.get_scentries(dis)
             lastone=len(scentries)-1
             lastcp=scentries[lastone]
@@ -62,10 +64,24 @@ for dis in ['BDD','MDD','OCD','SOC']:
             scentries.append(newsc)
             newsub.set_scentries(scentries,dis)
 
+# set eligibility for study
+dis='BDD'
+for key in subjects:
+    print(subjects[key].get_ID())
+    maxtime=subjects[key].get_maxtime()
+    initline=subjects[key].get_initline(dis)
+    subjects[key].set_instudy(False)
+    if (maxtime >= 52):
+        if ("scd102 1 scd104 2" in initline):
+            subjects[key].set_instudy(True)
+    
 print("Starting list")
 for key in subjects:
     print(subjects[key].get_ID())
-    scdict=subjects[key].get_cpdict()
+    print(subjects[key].get_maxtime())
+    print(subjects[key].get_initline('BDD'))
+    print(subjects[key].get_instudy())
+    scdict=subjects[key].get_scdict()
     for dis in scdict.keys():
         scentries=scdict[dis]
         for i in range(0,len(scentries)):
@@ -74,6 +90,23 @@ for key in subjects:
             end=sce.get_end()
             state=sce.get_state()
             print "%d %s %s %s" % (i, start, end, state)
+        print(dis)
+
+#BDD Partial remissions cp list
+#cpid="BDD Partial Remission"
+#cps[cpid]=cp(cpid)
+#cpentries=cps.get_cpentries()
+
+#for key in subjects:            #build BDD partial remission events
+#    cpentries=[]                #new counting process list
+#    maxtime=subjects[key].get_maxtime()  #get max time
+#    newcp=cpentry(0,maxtime,2)     #initial cp entry o to max censored
+#    cpentries.append(newcp)        #add to list
+#    subjects[key].set_cpentries(cpentries,'BDD_PARTREM')
+#                                   #get state changes
+#    scentries=scdict['BDD']   
         
-pf=open('bdd_state_python.obj','wb')      
-pickle.dump(subjects,pf,pickle.HIGHEST_PROTOCOL)
+        
+            
+#pf=open('bdd_state_python.obj','wb')      
+#pickle.dump(subjects,pf,pickle.HIGHEST_PROTOCOL)
