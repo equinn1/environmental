@@ -58,6 +58,9 @@ class cpobj:                      #counting process object class
         return
 
 class scentry:           #state change entry class
+    def print_entry(self):
+        print "%s %s %s" % (self.start, self.end, self.state)
+        return
     def get_start(self):                    #return start time  
         return self.start
     def set_start(self,start):              #set start time
@@ -80,6 +83,11 @@ class scentry:           #state change entry class
         return
 
 class cpentry:           #counting process entry class
+    def print_entry(self):
+        print "%s %s %s %s" % (self.start, self.end, self.flag, self.ID)
+        return
+    def get_ID(self):                    #return start time  
+        return self.ID
     def get_start(self):                    #return start time  
         return self.start
     def set_start(self,start):              #set start time
@@ -95,15 +103,19 @@ class cpentry:           #counting process entry class
     def set_state(self,flag):              #set state
         self.flag=flag
         return
-    def __init__(self,start,end,flag):     #cpentry constructor
+    def __init__(self,start,end,flag,ID):     #cpentry constructor
         self.start=start
         self.end=end
         self.flag=flag
+        self.ID=ID
         return
 
 class cp:       #counting process class
     def get_cpentries(self):              #return cp entries
         return self.cpentries
+    def append_cpentries(self,cpentry):              #return cp entries
+        self.cpentries.append(cpentry)
+        return
     def set_cpentries(self,cpentries):       #set cpentries
         self.cpentrie=cpentries
         return

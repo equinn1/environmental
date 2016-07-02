@@ -74,35 +74,59 @@ for key in subjects:
     if (maxtime >= 52):
         if ("scd102 1 scd104 2" in initline):
             subjects[key].set_instudy(True)
+    print(subjects[key].get_instudy())
     
 print("Starting list")
 for key in subjects:
     print(subjects[key].get_ID())
-    print(subjects[key].get_maxtime())
-    print(subjects[key].get_initline('BDD'))
-    print(subjects[key].get_instudy())
     scdict=subjects[key].get_scdict()
     for dis in scdict.keys():
+        print(dis)
         scentries=scdict[dis]
         for i in range(0,len(scentries)):
-            sce = scentries[i]
-            start=sce.get_start()
-            end=sce.get_end()
-            state=sce.get_state()
-            print "%d %s %s %s" % (i, start, end, state)
-        print(dis)
+            scentries[i].print_entry()
+#        print(dis)
 
 #BDD Partial remissions cp list
-#cpid="BDD Partial Remission"
-#cps[cpid]=cp(cpid)
-#cpentries=cps.get_cpentries()
+cpid="BDD PARTREM"
+cps[cpid]=cp(cpid)
+cpentries=cps[cpid].get_cpentries()
 
+for key in subjects:
+    if subjects[key].get_instudy()==True:  #select S in study
+        S=S+1
+        ID=subjects[key].get_ID()
+        scentries=subjects[key].get_scentries('BDD')
+        prevstate=None
+        for i in range(0,len(scentries)):
+            if (scentries[i].get_state()=='IE_FC'):
+                cpstart=scentries[i].get_start()
+ #           scentries[i].print_entry()
+            if scentries[i].get_state()=='IE_NFC' :
+                if prevstate=='IE_FC':
+                    newcpe=cpentry(cpstart,scentries[i].get_start(),1,ID)
+                    cps[cpid].append_cpentries(newcpe)
+  #                  newcpe.print_entry()
+                    cpstart=None
+            prevstate=scentries[i].get_state()
+
+print("S")
+           
+for cpid in cps:
+    cpentries=cps[cpid].get_cpentries()
+    for i in range(0,len(cpentries)):
+        cpentries[i].print_entry()
 #for key in subjects:            #build BDD partial remission events
-#    cpentries=[]                #new counting process list
-#    maxtime=subjects[key].get_maxtime()  #get max time
-#    newcp=cpentry(0,maxtime,2)     #initial cp entry o to max censored
-#    cpentries.append(newcp)        #add to list
-#    subjects[key].set_cpentries(cpentries,'BDD_PARTREM')
+#    if subjects[key].get_instudy()==True:
+#        maxtime=subjects[key].get_maxtime()  #get max time
+#        newcp=cpentry(0,maxtime,2)     #initial cp entry o to max censored
+#        cps[cpid].append_cpentries(newcp)
+#
+#for key in cps:
+#    cpentries=cps[key].get_cpentries()
+#    for i in range(0,len(cpentries)):
+#        cpentries[i].print_entry()
+#print(cps["BDD PARTREM"])
 #                                   #get state changes
 #    scentries=scdict['BDD']   
         
