@@ -82,9 +82,13 @@ def in_risk_set(key,current_state,state_col,risk_set_col):
     subjects[key].set_cpo_col(map(lambda z : z==current_state,\
     subjects[key].get_cpo_col(state_col)),risk_set_col)
 
-def risk_set_union(key,newcol,col1,col2):
-    subjects[key].set_cpo_col(subjects[key].get_cpo_col(col1) or\
-    subjects[key].get_cpo_col(col2),newcol)
+def risk_set_union(key,col1,col2,newcol):
+    rs1=subjects[key].get_cpo_col(col1)    #get first risk set column
+    rs2=subjects[key].get_cpo_col(col2)    #get second risk set column
+    rs3=[None]*len(rs1)
+    for i in range(0,len(rs1)):
+        rs3[i]=rs1[i] or rs2[i]
+    subjects[key].set_cpo_col(rs3,newcol)  #save new risk set column
     
 def epi_num(key,dis):
     state_col=dis+'_STATE'
@@ -129,11 +133,11 @@ for key in subjects:
     in_risk_set(key,'NIE_NFC','BDD_STATE','RS_BDD_PARTIMP') #BDD partimp
 
 #FULLREM risk set is union of one and two stage remission
-    risk_set_union(key,'RS_BDD_FULLREM','RS_BDD_1SREM','RS_BDD_2SREM')  
+    risk_set_union(key,'RS_BDD_1SREM','RS_BDD_2SREM','RS_BDD_FULLREM')  
     
 
 #FULLREL risk set is union of one and two stage relapse
-    risk_set_union(key,'RS_BDD_FULLREL','RS_BDD_1SREL','RS_BDD_2SREL')  
+    risk_set_union(key,'RS_BDD_1SREL','RS_BDD_2SREL','RS_BDD_FULLREL')  
 
 #compute episode number    
     epi_num(key,'BDD')  #episode number
@@ -161,58 +165,64 @@ for key in subjects:
     in_risk_set(key,'NIE_NFC','MDD_STATE','RS_MDD_PARTIMP') #BDD partimp
     
 #FULLREM risk set is union of one and two stage remission
-    risk_set_union(key,'RS_MDD_FULLREM','RS_MDD_1SREM','RS_MDD_2SREM')  
+    risk_set_union(key,'RS_MDD_1SREM','RS_MDD_2SREM','RS_MDD_FULLREM')  
     
 #FULLREL risk set is union of one and two stage relapse
-    risk_set_union(key,'RS_MDD_FULLREL','RS_MDD_1SREL','RS_MDD_2SREL')  
+    risk_set_union(key,'RS_MDD_1SREL','RS_MDD_2SREL','RS_MDD_FULLREL')  
 
 #compute episode number    
     epi_num(key,'MDD')  #episode number
     
 dis='BDD'
-for key in ['2CJ']:
+for key in ['5CC']:
     print(key)
     cpo=subjects[key].get_cpo()
     print(cpo)           
     print(len(cpo['RS_BDD_PARTREM']))
 
-
-def part_rem(dis):
-#partial remissions
-
-    fp=open('cp_'+dis+'_partrem.csv','w')
-    
-    fp.write("%s\n" % ("ID,start,end,flag,bdd_epi"))
+def cp_risk_set(event_col,state_col,event_state,covar,cutoff_week):
+    csvf=open(event_col+'.csv','w')
+    csvf.write("ID,start,end,episode,flag\n")
     
     for key in subjects:
-        ID=subjects[key].get_ID()
-        cpl=subjects[key].get_cpo_col('RS_'+dis+'_PARTREM')
-        cps=subjects[key].get_cpo_col(dis+'_STATE')
-        cov=subjects[key].get_cpo_col('BDD_EPISODE')
-        intake_state=subjects[key].get_intake_state(dis)
-        start=None
-        if intake_state=='IE_FC':
-            start=0
-        for i in range(1,len(cpl)):
-            if cpl[i-1]==True and cpl[i]==False :
-                if cps[i]=='IE_NFC':
-                    flag=1
-                else:
-                    flag=2
-                fp.write("%s,%d,%d,%s,%d\n" % (ID, start, i,flag, cov[i]))
-                start=None
-            elif cpl[i-1]==False and cpl[i]==True :
-                start=i
-            elif i==len(cpl)-1:
-                if cps[i]=='IE_FC':
-                    fp.write("%s,%d,%d,%s,%d\n" % (ID, start, i,'2',cov[i]))
-            elif cov[i-1]!=cov[i]:
-                if start != None:
-                    fp.write("%s,%d,%d,%s,%d\n" % (ID, start, i-1,'3',cov[i-1]))
-                    start=i
-    fp.close()
-            
-part_rem('BDD')
-part_rem('MDD')
+        if subjects[key].get_instudy():
+            ID=subjects[key].get_ID()
+            risk_set=subjects[key].get_cpo_col(event_col)
+            state=subjects[key].get_cpo_col(state_col)
+            episode_number=subjects[key].get_cpo_col(covar)
+    
+            print "%s %s" % (ID, event_col) 
+        
+            rs_start=0
+            flag='censor'
+            maxweek=min(len(risk_set),cutoff_week)
+            for i in range(1,maxweek):
+                epi=episode_number[i]
+                if (risk_set[i]==True and risk_set[i-1]==False):
+                    rs_start=i
+                    flag='censor'
+                elif (risk_set[i]==False and risk_set[i-1]==True):
+                    rs_end=i
+                    if state[i]==event_state:
+                        flag='event'
+                    print "        %s %s %s %s %s" % (ID, rs_start, rs_end, epi, flag)
+                    csvf.write("%s,%s,%s,%s,%s\n" % (ID, rs_start, rs_end, epi,1))
+                    rs_start=None
+                elif i==maxweek-1:
+                    if risk_set[i]:
+                        rs_end=i
+                        print "        %s %s %s %s %s" % (ID, rs_start, rs_end, epi, flag)
+                        csvf.write("%s,%s,%s,%s,%s\n" % (ID, rs_start, rs_end, epi,2))
+                elif episode_number[i] != episode_number[i-1]:
+                    flag="covariate"
+                    if risk_set[i]:
+                        rs_end=i-1
+                        last_epi=episode_number[i-1]
+                        print "        %s %s %s %s %s" % (ID, rs_start, rs_end, last_epi, flag)
+                        csvf.write("%s,%s,%s,%s,%s\n" % (ID, rs_start, rs_end, epi,3))
+                
+                        
+cp_risk_set('RS_BDD_PARTREM','BDD_STATE','IE_NFC','BDD_EPISODE',208)           
+
 #pf=open('bdd_state_python.obj','wb')      
 #pickle.dump(subjects,pf,pickle.HIGHEST_PROTOCOL)
