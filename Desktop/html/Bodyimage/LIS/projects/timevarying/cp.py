@@ -4,7 +4,6 @@ Created on Thu Jun 16 09:47:26 2016
 
 @author: gquinn
 """
-import pickle
 from cp_classes import *
 
 subjects={}
@@ -82,6 +81,8 @@ def in_risk_set(key,current_state,state_col,risk_set_col):
     subjects[key].set_cpo_col(map(lambda z : z==current_state,\
     subjects[key].get_cpo_col(state_col)),risk_set_col)
 
+#combine risk sets for two events by set union
+
 def risk_set_union(key,col1,col2,newcol):
     rs1=subjects[key].get_cpo_col(col1)    #get first risk set column
     rs2=subjects[key].get_cpo_col(col2)    #get second risk set column
@@ -89,6 +90,8 @@ def risk_set_union(key,col1,col2,newcol):
     for i in range(0,len(rs1)):
         rs3[i]=rs1[i] or rs2[i]
     subjects[key].set_cpo_col(rs3,newcol)  #save new risk set column
+    
+#assign episode number for this disorder    
     
 def epi_num(key,dis):
     state_col=dis+'_STATE'
@@ -108,7 +111,7 @@ def epi_num(key,dis):
             
     
 
-for key in subjects:
+for key in subjects:    #loop through subjects coding risk set and state
     
 #BDD
 
@@ -173,16 +176,21 @@ for key in subjects:
 #compute episode number    
     epi_num(key,'MDD')  #episode number
     
+    
+#display a particular ID for debugging    
+    
 dis='BDD'
-for key in ['5CC']:
+for key in ['3KP']:
     print(key)
     cpo=subjects[key].get_cpo()
     print(cpo)           
     print(len(cpo['RS_BDD_PARTREM']))
 
-def cp_risk_set(event_col,state_col,event_state,covar,cutoff_week):
-    csvf=open(event_col+'.csv','w')
-    csvf.write("ID,start,end,episode,flag\n")
+#function to build counting process dataset for an event 
+
+def cp_risk_set(event_col,state_col,event_state,covar,cutoff_week,prt=False):
+    csvf=open(event_col+'_'+covar+'.csv','w')
+    csvf.write("ID,start,end,flag,episode\n")
     
     for key in subjects:
         if subjects[key].get_instudy():
@@ -191,13 +199,14 @@ def cp_risk_set(event_col,state_col,event_state,covar,cutoff_week):
             state=subjects[key].get_cpo_col(state_col)
             episode_number=subjects[key].get_cpo_col(covar)
     
-            print "%s %s" % (ID, event_col) 
+            if prt:
+                print "%s %s" % (ID, event_col) 
         
             rs_start=0
             flag='censor'
             maxweek=min(len(risk_set),cutoff_week)
             for i in range(1,maxweek):
-                epi=episode_number[i]
+                epi=episode_number[i-1]
                 if (risk_set[i]==True and risk_set[i-1]==False):
                     rs_start=i
                     flag='censor'
@@ -205,24 +214,56 @@ def cp_risk_set(event_col,state_col,event_state,covar,cutoff_week):
                     rs_end=i
                     if state[i]==event_state:
                         flag='event'
-                    print "        %s %s %s %s %s" % (ID, rs_start, rs_end, epi, flag)
-                    csvf.write("%s,%s,%s,%s,%s\n" % (ID, rs_start, rs_end, epi,1))
+                    if prt:
+                        print "        %s %s %s %s %s" % \
+                        (ID, rs_start, rs_end, flag, epi)
+                    csvf.write("%s,%s,%s,%s,%s\n" %\
+                    (ID, rs_start, rs_end, 0, epi))
                     rs_start=None
                 elif i==maxweek-1:
                     if risk_set[i]:
                         rs_end=i
-                        print "        %s %s %s %s %s" % (ID, rs_start, rs_end, epi, flag)
-                        csvf.write("%s,%s,%s,%s,%s\n" % (ID, rs_start, rs_end, epi,2))
+                        if prt:
+                            print "        %s %s %s %s %s" %\
+                            (ID, rs_start, rs_end, flag, epi)
+                        csvf.write("%s,%s,%s,%s,%s\n" %\
+                        (ID, rs_start, rs_end, 1, epi))
                 elif episode_number[i] != episode_number[i-1]:
                     flag="covariate"
                     if risk_set[i]:
-                        rs_end=i-1
+                        rs_end=i
                         last_epi=episode_number[i-1]
-                        print "        %s %s %s %s %s" % (ID, rs_start, rs_end, last_epi, flag)
-                        csvf.write("%s,%s,%s,%s,%s\n" % (ID, rs_start, rs_end, epi,3))
+                        if prt:
+                            print "        %s %s %s %s %s" %\
+                            (ID, rs_start, rs_end, flag, last_epi)
+                        csvf.write("%s,%s,%s,%s,%s\n" %\
+                        (ID, rs_start, rs_end, 2, last_epi))
+                        rs_start=i
                 
+#full and partial remissions
                         
-cp_risk_set('RS_BDD_PARTREM','BDD_STATE','IE_NFC','BDD_EPISODE',208)           
+cp_risk_set('RS_BDD_PARTREM','BDD_STATE','IE_NFC','BDD_EPISODE',208)
 
-#pf=open('bdd_state_python.obj','wb')      
-#pickle.dump(subjects,pf,pickle.HIGHEST_PROTOCOL)
+cp_risk_set('RS_BDD_FULLREM','BDD_STATE','NIE_NP','BDD_EPISODE',208)
+
+cp_risk_set('RS_MDD_PARTREM','MDD_STATE','IE_NFC','BDD_EPISODE',208)
+
+cp_risk_set('RS_MDD_FULLREM','MDD_STATE','NIE_NP','BDD_EPISODE',208)           
+
+cp_risk_set('RS_MDD_PARTREM','MDD_STATE','IE_NFC','MDD_EPISODE',208)
+
+cp_risk_set('RS_MDD_FULLREM','MDD_STATE','NIE_NP','MDD_EPISODE',208)  
+                        
+#full and partial relapse                        
+                        
+cp_risk_set('RS_BDD_PARTREL','BDD_STATE','IE_FC','BDD_EPISODE',208)
+
+cp_risk_set('RS_BDD_FULLREL','BDD_STATE','IE_FC','BDD_EPISODE',208)
+
+cp_risk_set('RS_MDD_PARTREL','MDD_STATE','IE_FC','BDD_EPISODE',208)
+
+cp_risk_set('RS_MDD_FULLREL','MDD_STATE','IE_FC','BDD_EPISODE',208)           
+
+cp_risk_set('RS_MDD_PARTREL','MDD_STATE','IE_FC','MDD_EPISODE',208)
+
+cp_risk_set('RS_MDD_FULLREL','MDD_STATE','IE_FC','MDD_EPISODE',208)  
