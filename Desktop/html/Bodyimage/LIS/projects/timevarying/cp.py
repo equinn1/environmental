@@ -248,11 +248,11 @@ cp_risk_set('RS_BDD_FULLREM','BDD_STATE','NIE_NP','BDD_EPISODE',208)
 
 cp_risk_set('RS_MDD_PARTREM','MDD_STATE','IE_NFC','BDD_EPISODE',208)
 
-cp_risk_set('RS_MDD_FULLREM','MDD_STATE','NIE_NP','BDD_EPISODE',208)           
+cp_risk_set('RS_MDD_FULLREM','MDD_STATE','NIE_NP','BDD_EPISODE',208)   
 
 cp_risk_set('RS_MDD_PARTREM','MDD_STATE','IE_NFC','MDD_EPISODE',208)
 
-cp_risk_set('RS_MDD_FULLREM','MDD_STATE','NIE_NP','MDD_EPISODE',208)  
+cp_risk_set('RS_MDD_FULLREM','MDD_STATE','NIE_NP','MDD_EPISODE',208)             
                         
 #full and partial relapse                        
                         
@@ -260,10 +260,10 @@ cp_risk_set('RS_BDD_PARTREL','BDD_STATE','IE_FC','BDD_EPISODE',208)
 
 cp_risk_set('RS_BDD_FULLREL','BDD_STATE','IE_FC','BDD_EPISODE',208)
 
-cp_risk_set('RS_MDD_PARTREL','MDD_STATE','IE_FC','BDD_EPISODE',208)
+cp_risk_set('RS_MDD_PARTREL','BDD_STATE','IE_FC','BDD_EPISODE',208)
 
-cp_risk_set('RS_MDD_FULLREL','MDD_STATE','IE_FC','BDD_EPISODE',208)           
-
+cp_risk_set('RS_MDD_FULLREL','BDD_STATE','IE_FC','BDD_EPISODE',208)
+           
 cp_risk_set('RS_MDD_PARTREL','MDD_STATE','IE_FC','MDD_EPISODE',208)
 
-cp_risk_set('RS_MDD_FULLREL','MDD_STATE','IE_FC','MDD_EPISODE',208)  
+cp_risk_set('RS_MDD_FULLREL','MDD_STATE','IE_FC','MDD_EPISODE',208)    
