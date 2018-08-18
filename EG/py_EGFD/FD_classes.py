@@ -66,6 +66,12 @@ class shift:
 		return
 
 class shift_crew:
+	def printx(self):
+		for ffn in ['OF1','OF2','OF3','OF4','FF1','FF2','FF3','FF4','FF5']:
+			print(ffn)
+			print(type(self.crew[ffn]['FF']))
+		return
+
 	def get_crew(self):
 		return(self.crew)
 
@@ -78,6 +84,7 @@ class shift_crew:
 		plt = self.platoon.get_ffs()
 		for ffn in ['OF1','OF2','OF3','OF4','FF1','FF2','FF3','FF4','FF5']:
 			self.crew[ffn] = {}
+			self.crew[ffn]['FF'] = None
 			for dat in plt[ffn].keys():
 				if (dat <= tsdat):
 					if (plt[ffn][dat]['end_date'] is None):
